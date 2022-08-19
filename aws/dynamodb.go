@@ -86,6 +86,8 @@ func (dd *DynamoDB) InsertImageMessages(channelMessages []discord.ChannelMessage
 		}
 
 		for _, channelMessage := range channelMessages[start:end] {
+
+			time.Sleep(1000)
 			for _, attachment := range channelMessage.Attachments {
 				var wChannelMessage WChannelMessage
 				wChannelMessage.ChannelMessage = channelMessage
@@ -103,6 +105,7 @@ func (dd *DynamoDB) InsertImageMessages(channelMessages []discord.ChannelMessage
 				}
 			}
 		}
+		log.Println("CompleteCount:", written)
 
 		_, err = dd.client.BatchWriteItem(context.TODO(), &dynamodb.BatchWriteItemInput{
 			RequestItems: map[string][]types.WriteRequest{dd.tableName: writeReqs}})

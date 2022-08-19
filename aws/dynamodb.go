@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"os"
+	"time"
 
 	"github.com/Sut103/discord-getting-messages-for-dynamodb/discord"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -39,10 +40,9 @@ func NewDynamoDB() (DynamoDB, error) {
 		tableName: os.Getenv("DYNAMO_TABLE_NAME")}, nil
 }
 
-type image struct {
-	Id   string                 `dynamodbav:"id"`
-	Url  string                 `dynamodbav:"url"`
-	Info map[string]interface{} `dynamodbav:"info"`
+type ImageMessage struct {
+	URL            string                 `json:"url"`
+	ChannelMessage discord.ChannelMessage `json:"channel_message"`
 }
 
 func (dd *DynamoDB) GetLatestId() (string, error) {
@@ -54,7 +54,7 @@ func (dd *DynamoDB) GetLatestId() (string, error) {
 		return "", err
 	}
 
-	var images []image
+	var images []ImageMessage
 	err = attributevalue.UnmarshalListOfMaps(response.Items, &images)
 	if err != nil {
 		return "", err
@@ -63,19 +63,14 @@ func (dd *DynamoDB) GetLatestId() (string, error) {
 	if len(images) <= 0 {
 		return "", nil
 	}
-	return images[0].Id, nil
-}
-
-type WChannelMessage struct {
-	URL            string                 `json:"url"`
-	ChannelMessage discord.ChannelMessage `json:"channel_message"`
+	return images[0].ChannelMessage.ID, nil
 }
 
 func (dd *DynamoDB) InsertImageMessages(channelMessages []discord.ChannelMessage) error {
 	var err error
 	var item map[string]types.AttributeValue
 	written := 0
-	batchSize := 25
+	batchSize := 10
 	start := 0
 	end := start + batchSize
 	for start < len(channelMessages) {
@@ -89,15 +84,16 @@ func (dd *DynamoDB) InsertImageMessages(channelMessages []discord.ChannelMessage
 
 			time.Sleep(1000)
 			for _, attachment := range channelMessage.Attachments {
-				var wChannelMessage WChannelMessage
-				wChannelMessage.ChannelMessage = channelMessage
-				wChannelMessage.URL = attachment.ProxyURL
+				var imageMessage ImageMessage
+				imageMessage.ChannelMessage = channelMessage
+				imageMessage.URL = attachment.ProxyURL
 
-				item, err = attributevalue.MarshalMap(wChannelMessage)
+				item, err = attributevalue.MarshalMap(imageMessage)
 				if err != nil {
-					log.Println(wChannelMessage.ChannelMessage.ID, err)
+					log.Println(imageMessage.ChannelMessage.ID, err)
 
 				} else {
+					log.Println("Processing:", imageMessage.ChannelMessage.Author.Username, imageMessage.URL)
 					writeReqs = append(
 						writeReqs,
 						types.WriteRequest{PutRequest: &types.PutRequest{Item: item}},

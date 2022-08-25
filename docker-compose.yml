@@ -25,4 +25,4 @@ services:
     ports:
       - 8001:8001
     depends_on:
-      - dynamodb
+            - dynamodb-local

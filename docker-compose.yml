@@ -3,7 +3,7 @@ services:
   discord-getting-messages:
     depends_on:
       - dynamodb-local
-    build: .
+    image: "golang:1.18-bullseye"
     container_name: discord-getting-messages
     ports:
       - "8080:8080"

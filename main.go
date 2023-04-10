@@ -1,8 +1,6 @@
 package main
 
 import (
-	"log"
-
 	"github.com/Sut103/discord-getting-messages-for-dynamodb/aws"
 	"github.com/Sut103/discord-getting-messages-for-dynamodb/discord"
 )
@@ -19,12 +17,12 @@ func Setup() (discord.ChannelAPI, aws.DynamoDB, error) {
 func main() {
 	ca, dd, err := Setup()
 	if err != nil {
-		log.Fatalln(err)
+		panic(err)
 	}
 
 	latest_id, err := dd.GetLatestId()
 	if err != nil {
-		panic("")
+		panic(err)
 	}
 
 	var cms []discord.ChannelMessage

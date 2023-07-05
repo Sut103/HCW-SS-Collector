@@ -19,8 +19,9 @@ func getEndpoint(service, region string, options ...interface{}) (aws.Endpoint, 
 
 	if url, exists := os.LookupEnv("DYNAMO_ENDPOINT"); exists {
 		endpoint.URL = url
+		return endpoint, nil
 	}
-	return endpoint, nil
+	return endpoint, &aws.EndpointNotFoundError{}
 }
 
 type DynamoDB struct {

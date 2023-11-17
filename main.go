@@ -1,8 +1,11 @@
 package main
 
 import (
+	"context"
+
 	"github.com/Sut103/discord-getting-messages-for-dynamodb/aws"
 	"github.com/Sut103/discord-getting-messages-for-dynamodb/discord"
+	"github.com/aws/aws-lambda-go/lambda"
 )
 
 func Setup() (discord.ChannelAPI, aws.DynamoDB, error) {
@@ -14,7 +17,11 @@ func Setup() (discord.ChannelAPI, aws.DynamoDB, error) {
 	return ca, dd, nil
 }
 
-func main() {
+type MyEvent struct {
+	Name string `json:"name"`
+}
+
+func HandleRequest(ctx context.Context, name MyEvent) (string, error) {
 	ca, dd, err := Setup()
 	if err != nil {
 		panic(err)
@@ -42,4 +49,10 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	return "ok", nil
+}
+
+func main() {
+	lambda.Start(HandleRequest)
 }
